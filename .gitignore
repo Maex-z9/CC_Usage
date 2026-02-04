@@ -1,1 +1,32 @@
+# Python
 src/__pycache__/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+*.local
+
+# Credentials (should never be here, but just in case)
+.credentials.json
+credentials.json
+*.secret
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Generated icons
+/tmp/
+*.png
+
+# OS
+.DS_Store
+Thumbs.db
