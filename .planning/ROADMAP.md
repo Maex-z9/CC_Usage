@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Data Source** - Prove we can fetch usage data
 - [x] **Phase 2: System Tray & Display** - Show usage to user
 - [x] **Phase 3: Alerts** - Deliver core value with notifications
-- [ ] **Phase 4: Configuration & Polish** - Customization and auto-start
+- [x] **Phase 4: Configuration & Polish** - Customization and auto-start
 
 ## Phase Details
 
@@ -80,9 +80,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Create UserConfig dataclass and autostart module
-- [ ] 04-02-PLAN.md — Integrate config into TrayIndicator and notifier
-- [ ] 04-03-PLAN.md — Visual verification checkpoint
+- [x] 04-01-PLAN.md — Create UserConfig dataclass and autostart module
+- [x] 04-02-PLAN.md — Integrate config into TrayIndicator and notifier
+- [x] 04-03-PLAN.md — Visual verification checkpoint
 
 ## Progress
 
@@ -94,4 +94,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Data Source | 1/1 | Complete | 2026-02-04 |
 | 2. System Tray & Display | 3/3 | Complete | 2026-02-04 |
 | 3. Alerts | 2/2 | Complete | 2026-02-04 |
-| 4. Configuration & Polish | 0/3 | In Progress | - |
+| 4. Configuration & Polish | 3/3 | Complete | 2026-02-04 |

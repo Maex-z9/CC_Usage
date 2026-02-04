@@ -11,7 +11,7 @@
 - [x] **TRAY-02**: Click icon to see menu with current usage details
 - [x] **TRAY-03**: Hover tooltip shows quick usage summary (panel label workaround for GNOME)
 - [x] **TRAY-04**: Color-coded icon (green/yellow/red based on highest usage level)
-- [ ] **TRAY-05**: Auto-start on login via .desktop file
+- [x] **TRAY-05**: Auto-start on login via .desktop file
 
 ### Usage Display
 
@@ -29,10 +29,10 @@
 
 ### Configuration
 
-- [ ] **CONF-01**: Configurable thresholds per metric
-- [ ] **CONF-02**: Configurable polling interval (default 60s)
-- [ ] **CONF-03**: Keyboard shortcut to force refresh / show popup
-- [ ] **CONF-04**: Pause notifications mode (presentation mode)
+- [x] **CONF-01**: Configurable thresholds per metric
+- [x] **CONF-02**: Configurable polling interval (default 300s, range 30-3600s)
+- [x] **CONF-03**: Force refresh via menu (note: global hotkeys not supported by AppIndicator)
+- [x] **CONF-04**: Pause notifications mode (presentation mode)
 
 ### Data Source
 
@@ -82,17 +82,17 @@
 | ALRT-03 | Phase 3 | Complete |
 | ALRT-04 | Phase 3 | Complete |
 | ALRT-05 | Phase 3 | Complete |
-| CONF-01 | Phase 4 | Pending |
-| CONF-02 | Phase 4 | Pending |
-| CONF-03 | Phase 4 | Pending |
-| CONF-04 | Phase 4 | Pending |
-| TRAY-05 | Phase 4 | Pending |
+| CONF-01 | Phase 4 | Complete |
+| CONF-02 | Phase 4 | Complete |
+| CONF-03 | Phase 4 | Complete |
+| CONF-04 | Phase 4 | Complete |
+| TRAY-05 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total
 - Mapped to phases: 18
-- Unmapped: 0 ✓
+- Complete: 18 ✓
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after Phase 3 completion*
+*Last updated: 2026-02-04 after Phase 4 completion - v1.0 milestone complete*
