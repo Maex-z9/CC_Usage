@@ -21,11 +21,11 @@
 
 ### Alerts
 
-- [ ] **ALRT-01**: Popup notification at configured thresholds (default 50/75/90%)
-- [ ] **ALRT-02**: Combined popup when both metrics hit same threshold
-- [ ] **ALRT-03**: Different thresholds configurable per metric (session vs weekly)
-- [ ] **ALRT-04**: Notification urgency: low at 50%, normal at 75%, critical at 90%
-- [ ] **ALRT-05**: "Open Claude Code" action button in notification
+- [x] **ALRT-01**: Popup notification at configured thresholds (default 50/75/90%)
+- [x] **ALRT-02**: Combined popup when both metrics hit same threshold
+- [x] **ALRT-03**: Different thresholds configurable per metric (session vs weekly)
+- [x] **ALRT-04**: Notification urgency: low at 50%, normal at 75%, critical at 90%
+- [x] **ALRT-05**: "Open Claude Code" action button in notification
 
 ### Configuration
 
@@ -77,11 +77,11 @@
 | DISP-01 | Phase 2 | Complete |
 | DISP-02 | Phase 2 | Complete |
 | DISP-03 | Phase 2 | Complete |
-| ALRT-01 | Phase 3 | Pending |
-| ALRT-02 | Phase 3 | Pending |
-| ALRT-03 | Phase 3 | Pending |
-| ALRT-04 | Phase 3 | Pending |
-| ALRT-05 | Phase 3 | Pending |
+| ALRT-01 | Phase 3 | Complete |
+| ALRT-02 | Phase 3 | Complete |
+| ALRT-03 | Phase 3 | Complete |
+| ALRT-04 | Phase 3 | Complete |
+| ALRT-05 | Phase 3 | Complete |
 | CONF-01 | Phase 4 | Pending |
 | CONF-02 | Phase 4 | Pending |
 | CONF-03 | Phase 4 | Pending |
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after Phase 2 completion*
+*Last updated: 2026-02-04 after Phase 3 completion*
