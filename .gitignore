@@ -30,3 +30,6 @@ credentials.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Development planning docs
+.planning/
