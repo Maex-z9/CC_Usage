@@ -18,7 +18,7 @@ import sys
 
 from src.icon_generator import generate_gauge_icon
 from src.utils import format_time_until
-from src.config import get_access_token
+from src.config import get_access_token, UserConfig
 from src.api import fetch_with_retry, APIError, AuthenticationError
 from src.notifier import UsageNotifier
 
@@ -33,13 +33,22 @@ class TrayIndicator:
         self.usage_data = None
         self.indicator = None
         self.menu = None
-        self.notifier = UsageNotifier()
+        self.timer_id = None
+
+        # Load configuration
+        self.config = UserConfig.load()
+
+        # Initialize notifier with both threshold lists
+        self.notifier = UsageNotifier(
+            session_thresholds=self.config.session_thresholds,
+            weekly_thresholds=self.config.weekly_thresholds
+        )
 
         self._setup_indicator()
         self._update_usage()
 
-        # Start periodic updates every 5 minutes
-        GLib.timeout_add_seconds(300, self._update_usage)
+        # Start periodic updates with config interval
+        self._start_update_timer()
 
     def _setup_indicator(self):
         """Set up the AppIndicator with initial icon and menu."""
@@ -88,6 +97,15 @@ class TrayIndicator:
         # Return GLib.SOURCE_CONTINUE to keep timer running
         return GLib.SOURCE_CONTINUE
 
+    def _start_update_timer(self):
+        """Start or restart periodic update timer with config interval."""
+        if self.timer_id is not None:
+            GLib.source_remove(self.timer_id)
+        self.timer_id = GLib.timeout_add_seconds(
+            self.config.polling_interval,
+            self._update_usage
+        )
+
     def _refresh_display(self):
         """Update icon, tooltip, and menu based on current usage data."""
         if self.usage_data is None:
@@ -116,6 +134,9 @@ class TrayIndicator:
 
         # Rebuild menu with current data
         self._build_menu()
+
+        # Pass pause flag to notifier before check_and_notify
+        self.notifier.pause_notifications = self.config.pause_notifications
 
         # Check thresholds and show notifications if needed
         # Convert datetime to timestamp for notifier
