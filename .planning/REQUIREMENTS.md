@@ -7,17 +7,17 @@
 
 ### System Tray
 
-- [ ] **TRAY-01**: System tray icon visible in GNOME panel
-- [ ] **TRAY-02**: Click icon to see menu with current usage details
-- [ ] **TRAY-03**: Hover tooltip shows quick usage summary
-- [ ] **TRAY-04**: Color-coded icon (green/yellow/red based on highest usage level)
+- [x] **TRAY-01**: System tray icon visible in GNOME panel
+- [x] **TRAY-02**: Click icon to see menu with current usage details
+- [x] **TRAY-03**: Hover tooltip shows quick usage summary (panel label workaround for GNOME)
+- [x] **TRAY-04**: Color-coded icon (green/yellow/red based on highest usage level)
 - [ ] **TRAY-05**: Auto-start on login via .desktop file
 
 ### Usage Display
 
-- [ ] **DISP-01**: Show session % (five_hour utilization)
-- [ ] **DISP-02**: Show weekly % (seven_day utilization)
-- [ ] **DISP-03**: Show time remaining until reset ("Resets in 2h 15m")
+- [x] **DISP-01**: Show session % (five_hour utilization)
+- [x] **DISP-02**: Show weekly % (seven_day utilization)
+- [x] **DISP-03**: Show time remaining until reset ("Resets in 2h 15m")
 
 ### Alerts
 
@@ -70,13 +70,13 @@
 | DATA-01 | Phase 1 | Complete |
 | DATA-02 | Phase 1 | Complete |
 | DATA-03 | Phase 1 | Complete |
-| TRAY-01 | Phase 2 | Pending |
-| TRAY-02 | Phase 2 | Pending |
-| TRAY-03 | Phase 2 | Pending |
-| TRAY-04 | Phase 2 | Pending |
-| DISP-01 | Phase 2 | Pending |
-| DISP-02 | Phase 2 | Pending |
-| DISP-03 | Phase 2 | Pending |
+| TRAY-01 | Phase 2 | Complete |
+| TRAY-02 | Phase 2 | Complete |
+| TRAY-03 | Phase 2 | Complete |
+| TRAY-04 | Phase 2 | Complete |
+| DISP-01 | Phase 2 | Complete |
+| DISP-02 | Phase 2 | Complete |
+| DISP-03 | Phase 2 | Complete |
 | ALRT-01 | Phase 3 | Pending |
 | ALRT-02 | Phase 3 | Pending |
 | ALRT-03 | Phase 3 | Pending |
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after Phase 1 completion*
+*Last updated: 2026-02-04 after Phase 2 completion*
