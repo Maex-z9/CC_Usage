@@ -12,7 +12,7 @@ This roadmap delivers a Linux/GNOME system tray application that monitors Claude
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Source** - Prove we can fetch usage data
+- [x] **Phase 1: Data Source** - Prove we can fetch usage data
 - [ ] **Phase 2: System Tray & Display** - Show usage to user
 - [ ] **Phase 3: Alerts** - Deliver core value with notifications
 - [ ] **Phase 4: Configuration & Polish** - Customization and auto-start
@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — Create data source layer (config + API client with retry)
+- [x] 01-01-PLAN.md — Create data source layer (config + API client with retry)
 
 ### Phase 2: System Tray & Display
 **Goal**: User can see current usage status via system tray icon and menu
@@ -86,7 +86,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Source | 0/1 | Ready to execute | - |
+| 1. Data Source | 1/1 | Complete | 2026-02-04 |
 | 2. System Tray & Display | 0/TBD | Not started | - |
 | 3. Alerts | 0/TBD | Not started | - |
 | 4. Configuration & Polish | 0/TBD | Not started | - |

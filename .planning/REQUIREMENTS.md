@@ -36,9 +36,9 @@
 
 ### Data Source
 
-- [ ] **DATA-01**: Read OAuth token from ~/.claude/.credentials.json
-- [ ] **DATA-02**: Poll Anthropic usage API periodically
-- [ ] **DATA-03**: Handle API errors gracefully with retry
+- [x] **DATA-01**: Read OAuth token from ~/.claude/.credentials.json
+- [x] **DATA-02**: Poll Anthropic usage API periodically
+- [x] **DATA-03**: Handle API errors gracefully with retry
 
 ## v2 Requirements
 
@@ -67,9 +67,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Complete |
+| DATA-02 | Phase 1 | Complete |
+| DATA-03 | Phase 1 | Complete |
 | TRAY-01 | Phase 2 | Pending |
 | TRAY-02 | Phase 2 | Pending |
 | TRAY-03 | Phase 2 | Pending |
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after initial definition*
+*Last updated: 2026-02-04 after Phase 1 completion*
