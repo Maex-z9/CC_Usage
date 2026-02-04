@@ -46,10 +46,10 @@ class TrayIndicator:
         )
 
         self._setup_indicator()
-        self._update_usage()
 
-        # Start periodic updates with config interval
-        self._start_update_timer()
+        # Defer initial update and timer start until GTK main loop is running
+        # This ensures the UI is fully initialized before we update it
+        GLib.idle_add(self._initial_update)
 
     def _setup_indicator(self):
         """Set up the AppIndicator with initial icon and menu."""
@@ -97,6 +97,16 @@ class TrayIndicator:
 
         # Return GLib.SOURCE_CONTINUE to keep timer running
         return GLib.SOURCE_CONTINUE
+
+    def _initial_update(self):
+        """Perform initial update after GTK main loop starts.
+
+        Returns:
+            GLib.SOURCE_REMOVE to run only once
+        """
+        self._update_usage()
+        self._start_update_timer()
+        return GLib.SOURCE_REMOVE
 
     def _start_update_timer(self):
         """Start or restart periodic update timer with config interval."""
@@ -236,7 +246,10 @@ class TrayIndicator:
         Uses GLib.idle_add to defer the update until after the menu closes,
         avoiding GTK crashes from rebuilding the menu during event handling.
         """
-        GLib.idle_add(self._update_usage)
+        def do_refresh():
+            self._update_usage()
+            return GLib.SOURCE_REMOVE  # Run only once, don't repeat
+        GLib.idle_add(do_refresh)
 
     def _on_pause_toggled(self, widget):
         """Handle Pause Notifications toggle."""
