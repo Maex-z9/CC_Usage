@@ -47,15 +47,33 @@ Install the [AppIndicator Support](https://extensions.gnome.org/extension/615/ap
 
 ## Installation
 
-1. Clone the repository:
+### Quick Install (recommended)
+
+```bash
+git clone https://github.com/Maex-z9/CC_Usage.git
+cd CC_Usage
+./install.sh
+```
+
+This installs system dependencies and the app. Then run with: `claude-usage`
+
+### Manual Install
+
+1. Install system dependencies:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/overlay-CC-usage.git
-   cd overlay-CC-usage
+   # Ubuntu/Debian
+   sudo apt install python3-gi python3-gi-cairo gir1.2-ayatanaappindicator3-0.1 gir1.2-notify-0.7
+
+   # Fedora
+   sudo dnf install python3-gobject python3-cairo libayatana-appindicator-gtk3 libnotify
+
+   # Arch
+   sudo pacman -S python-gobject python-cairo libayatana-appindicator libnotify
    ```
 
-2. Install Python dependencies:
+2. Install the app:
    ```bash
-   pip install -r requirements.txt
+   pip install git+https://github.com/Maex-z9/CC_Usage.git
    ```
 
 3. Authenticate with Claude Code (if not already done):
@@ -68,6 +86,11 @@ Install the [AppIndicator Support](https://extensions.gnome.org/extension/615/ap
 
 Run the application:
 
+```bash
+claude-usage
+```
+
+Or if running from source:
 ```bash
 python3 -m src.main
 ```
