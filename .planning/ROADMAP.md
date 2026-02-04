@@ -28,10 +28,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Application successfully fetches usage data from Anthropic API
   3. Application parses five_hour and seven_day utilization percentages
   4. Application handles API errors gracefully with retry logic
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] TBD
+- [ ] 01-01-PLAN.md — Create data source layer (config + API client with retry)
 
 ### Phase 2: System Tray & Display
 **Goal**: User can see current usage status via system tray icon and menu
@@ -86,7 +86,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Source | 0/TBD | Not started | - |
+| 1. Data Source | 0/1 | Ready to execute | - |
 | 2. System Tray & Display | 0/TBD | Not started | - |
 | 3. Alerts | 0/TBD | Not started | - |
 | 4. Configuration & Polish | 0/TBD | Not started | - |
