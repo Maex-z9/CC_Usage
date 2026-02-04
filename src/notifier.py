@@ -17,16 +17,21 @@ class UsageNotifier:
     Tracks alerted thresholds to prevent notification spam.
     """
 
-    THRESHOLDS = [50, 75, 90]
-
-    def __init__(self, app_name="Claude Code Usage Monitor"):
+    def __init__(self, app_name="Claude Code Usage Monitor",
+                 session_thresholds=None, weekly_thresholds=None):
         """Initialize the notifier.
 
         Args:
             app_name: Name shown in notification server
+            session_thresholds: List of threshold percentages for session (default [50, 75, 90])
+            weekly_thresholds: List of threshold percentages for weekly (default to session_thresholds)
         """
         # Initialize libnotify once
         Notify.init(app_name)
+
+        # Configure thresholds
+        self.session_thresholds = session_thresholds if session_thresholds is not None else [50, 75, 90]
+        self.weekly_thresholds = weekly_thresholds if weekly_thresholds is not None else self.session_thresholds
 
         # Track alerted thresholds: {(metric, threshold): True}
         # metric = 'session' or 'weekly'
@@ -35,6 +40,9 @@ class UsageNotifier:
 
         # Grace period flag - skip first poll to avoid startup spam
         self.first_poll = True
+
+        # Pause notifications mode
+        self.pause_notifications = False
 
         # Cache server capabilities
         self._actions_supported = None
@@ -55,9 +63,13 @@ class UsageNotifier:
             self.first_poll = False
             return
 
+        # Respect pause mode
+        if self.pause_notifications:
+            return
+
         # Find highest threshold crossed for each metric
-        session_threshold = self._highest_crossed(session_pct, self.THRESHOLDS)
-        weekly_threshold = self._highest_crossed(weekly_pct, self.THRESHOLDS)
+        session_threshold = self._highest_crossed(session_pct, self.session_thresholds)
+        weekly_threshold = self._highest_crossed(weekly_pct, self.weekly_thresholds)
 
         # Determine if we should alert
         session_needs_alert = (
@@ -265,3 +277,13 @@ class UsageNotifier:
 
         # Open Claude Code in browser
         subprocess.Popen(["/usr/bin/xdg-open", "https://claude.ai"])
+
+    def set_thresholds(self, session_thresholds, weekly_thresholds=None):
+        """Update threshold configuration.
+
+        Args:
+            session_thresholds: List of session threshold percentages
+            weekly_thresholds: List of weekly threshold percentages (defaults to session)
+        """
+        self.session_thresholds = session_thresholds
+        self.weekly_thresholds = weekly_thresholds if weekly_thresholds is not None else session_thresholds
