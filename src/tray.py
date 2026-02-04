@@ -13,7 +13,7 @@ import gi
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
-from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib, Gdk
+from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib
 import sys
 
 from src.icon_generator import generate_gauge_icon
@@ -179,19 +179,11 @@ class TrayIndicator:
         # Add separator
         menu.append(Gtk.SeparatorMenuItem())
 
-        # Add Refresh item with accelerator
+        # Add Refresh item
+        # Note: AppIndicator menus don't support GTK accelerators (no window to attach AccelGroup)
+        # Show the shortcut hint in the label instead
         refresh_item = Gtk.MenuItem(label="Refresh")
         refresh_item.connect('activate', self._on_refresh_clicked)
-        # Note: GTK menu accelerators display in menu but only work when menu is open
-        # This is a GTK/AppIndicator limitation, not a global hotkey
-        accel_group = Gtk.AccelGroup()
-        refresh_item.add_accelerator(
-            "activate",
-            accel_group,
-            Gdk.KEY_r,
-            Gdk.ModifierType.CONTROL_MASK,
-            Gtk.AccelFlags.VISIBLE
-        )
         menu.append(refresh_item)
 
         # Add Settings submenu
@@ -239,8 +231,12 @@ class TrayIndicator:
         return menu
 
     def _on_refresh_clicked(self, widget):
-        """Handle Refresh menu item click."""
-        self._update_usage()
+        """Handle Refresh menu item click.
+
+        Uses GLib.idle_add to defer the update until after the menu closes,
+        avoiding GTK crashes from rebuilding the menu during event handling.
+        """
+        GLib.idle_add(self._update_usage)
 
     def _on_pause_toggled(self, widget):
         """Handle Pause Notifications toggle."""
