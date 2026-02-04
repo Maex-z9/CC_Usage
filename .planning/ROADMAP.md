@@ -77,10 +77,12 @@ Plans:
   3. User can trigger force refresh via keyboard shortcut
   4. User can enable pause notifications mode
   5. Application auto-starts on login via .desktop file
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 04-01-PLAN.md — Create UserConfig dataclass and autostart module
+- [ ] 04-02-PLAN.md — Integrate config into TrayIndicator and notifier
+- [ ] 04-03-PLAN.md — Visual verification checkpoint
 
 ## Progress
 
@@ -92,4 +94,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Data Source | 1/1 | Complete | 2026-02-04 |
 | 2. System Tray & Display | 3/3 | Complete | 2026-02-04 |
 | 3. Alerts | 2/2 | Complete | 2026-02-04 |
-| 4. Configuration & Polish | 0/TBD | Not started | - |
+| 4. Configuration & Polish | 0/3 | In Progress | - |
