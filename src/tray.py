@@ -20,6 +20,7 @@ from src.icon_generator import generate_gauge_icon
 from src.utils import format_time_until
 from src.config import get_access_token
 from src.api import fetch_with_retry, APIError, AuthenticationError
+from src.notifier import UsageNotifier
 
 
 class TrayIndicator:
@@ -32,6 +33,7 @@ class TrayIndicator:
         self.usage_data = None
         self.indicator = None
         self.menu = None
+        self.notifier = UsageNotifier()
 
         self._setup_indicator()
         self._update_usage()
@@ -114,6 +116,20 @@ class TrayIndicator:
 
         # Rebuild menu with current data
         self._build_menu()
+
+        # Check thresholds and show notifications if needed
+        # Convert datetime to timestamp for notifier
+        session_reset_ts = (self.usage_data.session_resets_at.timestamp()
+                            if self.usage_data.session_resets_at else 0)
+        weekly_reset_ts = (self.usage_data.weekly_resets_at.timestamp()
+                           if self.usage_data.weekly_resets_at else 0)
+
+        self.notifier.check_and_notify(
+            session_percent,
+            weekly_percent,
+            session_reset_ts,
+            weekly_reset_ts
+        )
 
     def _build_menu(self) -> Gtk.Menu:
         """Build the dropdown menu with usage info and actions.
