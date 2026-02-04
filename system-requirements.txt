@@ -6,8 +6,8 @@
 # Or on Fedora/RHEL:
 #   sudo dnf install $(grep -v '^#' system-requirements.txt | sed 's/gir1.2-//' | tr '[:upper:]' '[:lower:]')
 
-# AppIndicator3 GObject Introspection bindings (for system tray)
-gir1.2-appindicator3-0.1
+# AyatanaAppIndicator3 GObject Introspection bindings (for system tray)
+gir1.2-ayatanaappindicator3-0.1
 
 # GTK3 GObject Introspection bindings (should already be present on GNOME)
 gir1.2-gtk-3.0

@@ -5,9 +5,9 @@ Displays usage data via system tray icon, menu, and tooltip.
 """
 import gi
 
-gi.require_version('AppIndicator3', '0.1')
+gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
-from gi.repository import AppIndicator3, Gtk, GLib
+from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib
 import sys
 
 from src.icon_generator import generate_gauge_icon
