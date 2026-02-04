@@ -61,10 +61,11 @@ Plans:
   4. Notification urgency matches severity (low at 50%, normal at 75%, critical at 90%)
   5. User can click "Open Claude Code" button in notification
   6. Application tracks alerted thresholds to prevent repeat notifications
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD
+- [ ] 03-01-PLAN.md — Create UsageNotifier class and integrate with TrayIndicator
+- [ ] 03-02-PLAN.md — Visual verification checkpoint
 
 ### Phase 4: Configuration & Polish
 **Goal**: User can customize behavior and application auto-starts on login
@@ -90,5 +91,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Data Source | 1/1 | Complete | 2026-02-04 |
 | 2. System Tray & Display | 3/3 | Complete | 2026-02-04 |
-| 3. Alerts | 0/TBD | Not started | - |
+| 3. Alerts | 0/2 | Not started | - |
 | 4. Configuration & Polish | 0/TBD | Not started | - |
