@@ -1,0 +1,26 @@
+# System packages required for Claude Code Usage Overlay
+#
+# Install with:
+#   sudo apt-get install $(grep -v '^#' system-requirements.txt)
+#
+# Or on Fedora/RHEL:
+#   sudo dnf install $(grep -v '^#' system-requirements.txt | sed 's/gir1.2-//' | tr '[:upper:]' '[:lower:]')
+
+# AppIndicator3 GObject Introspection bindings (for system tray)
+gir1.2-appindicator3-0.1
+
+# GTK3 GObject Introspection bindings (should already be present on GNOME)
+gir1.2-gtk-3.0
+
+# Notify GObject Introspection bindings (for Phase 3 notifications)
+gir1.2-notify-0.7
+
+# Python GObject bindings (should already be present)
+python3-gi
+
+# Cairo bindings for icon generation (should already be present)
+python3-gi-cairo
+
+# Python packages (can also use pip if preferred)
+python3-humanize
+python3-requests
