@@ -52,12 +52,12 @@ Install the [AppIndicator Support](https://extensions.gnome.org/extension/615/ap
 
 1. Install system dependencies (see [System Dependencies](#system-dependencies) above)
 
-2. Install with pipx (recommended) or pip:
+2. Install with pipx (recommended):
    ```bash
-   pipx install claude-code-usage
-   # or
-   pip install claude-code-usage
+   pipx install claude-code-usage --system-site-packages
    ```
+
+   The `--system-site-packages` flag is required to access system GTK libraries.
 
 3. Run: `claude-usage`
 
