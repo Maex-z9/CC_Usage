@@ -171,3 +171,32 @@ def fetch_with_retry(access_token: str, max_retries: int = 3) -> UsageData:
         raise last_exception
     else:
         raise APIError("All retries exhausted")
+
+
+if __name__ == "__main__":
+    """Integration test: fetch and display current usage."""
+    from src.config import get_access_token
+
+    try:
+        # Get OAuth token
+        token = get_access_token()
+
+        # Fetch usage data
+        usage = fetch_with_retry(token)
+
+        # Display results
+        print("Claude Code Usage:")
+        print(f"  Session (5-hour): {usage.session_percent:.1f}% (resets at {usage.session_resets_at})")
+        print(f"  Weekly (7-day): {usage.weekly_percent:.1f}% (resets at {usage.weekly_resets_at})")
+
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    except AuthenticationError as e:
+        print(f"Authentication failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    except APIError as e:
+        print(f"API error: {e}", file=sys.stderr)
+        sys.exit(1)
