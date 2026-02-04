@@ -43,10 +43,12 @@ Plans:
   3. Hover tooltip shows quick usage summary
   4. Icon color reflects highest usage level (green/yellow/red)
   5. Menu displays time remaining until reset
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 02-01-PLAN.md — Create icon generator and time formatting utilities
+- [ ] 02-02-PLAN.md — Create TrayIndicator class and main entry point
+- [ ] 02-03-PLAN.md — Visual verification checkpoint
 
 ### Phase 3: Alerts
 **Goal**: User receives timely popup notifications when usage hits thresholds
@@ -87,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Source | 1/1 | Complete | 2026-02-04 |
-| 2. System Tray & Display | 0/TBD | Not started | - |
+| 2. System Tray & Display | 0/3 | Not started | - |
 | 3. Alerts | 0/TBD | Not started | - |
 | 4. Configuration & Polish | 0/TBD | Not started | - |
