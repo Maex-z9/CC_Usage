@@ -85,8 +85,8 @@ def generate_gauge_icon(percentage: float, color_percentage: float, size: int = 
         ctx.arc(center, center, radius, -math.pi / 2, end_angle)
         ctx.stroke()
 
-    # Save to unique filename per color state
-    icon_path = f"/tmp/claude-usage-{color_name}.png"
+    # Save to unique filename per percentage and color state (bust GTK icon cache)
+    icon_path = f"/tmp/claude-usage-{int(percentage)}-{color_name}.png"
     surface.write_to_png(icon_path)
 
     return os.path.abspath(icon_path)
