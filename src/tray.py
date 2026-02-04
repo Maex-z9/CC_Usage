@@ -13,14 +13,15 @@ import gi
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
-from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib
+from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib, Gdk
 import sys
 
 from src.icon_generator import generate_gauge_icon
 from src.utils import format_time_until
-from src.config import get_access_token, UserConfig
+from src.config import get_access_token, UserConfig, get_config_path
 from src.api import fetch_with_retry, APIError, AuthenticationError
 from src.notifier import UsageNotifier
+from src.autostart import create_autostart_entry, is_autostart_enabled, remove_autostart_entry
 
 
 class TrayIndicator:
@@ -178,14 +179,46 @@ class TrayIndicator:
         # Add separator
         menu.append(Gtk.SeparatorMenuItem())
 
-        # Add Refresh item
+        # Add Refresh item with accelerator
         refresh_item = Gtk.MenuItem(label="Refresh")
         refresh_item.connect('activate', self._on_refresh_clicked)
+        # Note: GTK menu accelerators display in menu but only work when menu is open
+        # This is a GTK/AppIndicator limitation, not a global hotkey
+        accel_group = Gtk.AccelGroup()
+        refresh_item.add_accelerator(
+            "activate",
+            accel_group,
+            Gdk.KEY_r,
+            Gdk.ModifierType.CONTROL_MASK,
+            Gtk.AccelFlags.VISIBLE
+        )
         menu.append(refresh_item)
 
-        # Add Settings item (placeholder for Phase 4)
+        # Add Settings submenu
         settings_item = Gtk.MenuItem(label="Settings")
-        settings_item.set_sensitive(False)
+        settings_submenu = Gtk.Menu()
+
+        # Pause Notifications checkbox
+        pause_item = Gtk.CheckMenuItem(label="Pause Notifications")
+        pause_item.set_active(self.config.pause_notifications)
+        pause_item.connect('activate', self._on_pause_toggled)
+        settings_submenu.append(pause_item)
+
+        # Autostart on Login checkbox
+        autostart_item = Gtk.CheckMenuItem(label="Autostart on Login")
+        autostart_item.set_active(is_autostart_enabled())
+        autostart_item.connect('activate', self._on_autostart_toggled)
+        settings_submenu.append(autostart_item)
+
+        # Separator
+        settings_submenu.append(Gtk.SeparatorMenuItem())
+
+        # Edit Config File item
+        edit_config_item = Gtk.MenuItem(label="Edit Config File...")
+        edit_config_item.connect('activate', self._on_edit_config_clicked)
+        settings_submenu.append(edit_config_item)
+
+        settings_item.set_submenu(settings_submenu)
         menu.append(settings_item)
 
         # Add separator
@@ -208,6 +241,30 @@ class TrayIndicator:
     def _on_refresh_clicked(self, widget):
         """Handle Refresh menu item click."""
         self._update_usage()
+
+    def _on_pause_toggled(self, widget):
+        """Handle Pause Notifications toggle."""
+        self.config.pause_notifications = widget.get_active()
+        self.config.save()
+        self.notifier.pause_notifications = self.config.pause_notifications
+
+    def _on_autostart_toggled(self, widget):
+        """Handle Autostart toggle."""
+        if widget.get_active():
+            create_autostart_entry(True)
+        else:
+            remove_autostart_entry()
+        self.config.autostart_enabled = widget.get_active()
+        self.config.save()
+
+    def _on_edit_config_clicked(self, widget):
+        """Open config file in default editor."""
+        import subprocess
+        config_path = get_config_path()
+        # Ensure file exists with defaults
+        if not config_path.exists():
+            self.config.save()
+        subprocess.Popen(["/usr/bin/xdg-open", str(config_path)])
 
     def _on_quit_clicked(self, widget):
         """Handle Quit menu item click."""
