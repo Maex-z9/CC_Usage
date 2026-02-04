@@ -104,6 +104,21 @@ class TrayIndicator:
     def _initial_update(self):
         """Perform initial update after GTK main loop starts.
 
+        Sets loading label, then defers the API call to give GTK time to render.
+
+        Returns:
+            GLib.SOURCE_REMOVE to run only once
+        """
+        # Set loading label now that main loop is running
+        self.indicator.set_label("...", "100%|100%")
+
+        # Defer API call with small timeout so GTK can render the loading label
+        GLib.timeout_add(50, self._do_initial_fetch)  # 50ms delay
+        return GLib.SOURCE_REMOVE
+
+    def _do_initial_fetch(self):
+        """Fetch initial data and start update timer.
+
         Returns:
             GLib.SOURCE_REMOVE to run only once
         """
