@@ -64,6 +64,9 @@ class TrayIndicator:
         )
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
 
+        # Set initial label while loading
+        self.indicator.set_label("...", "100%|100%")
+
         # Build initial menu with loading message
         menu = Gtk.Menu()
         loading_item = Gtk.MenuItem(label="Loading...")
