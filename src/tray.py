@@ -1,7 +1,13 @@
 """
 System tray indicator for Claude Code usage overlay.
 
-Displays usage data via system tray icon, menu, and tooltip.
+Displays usage data via:
+- System tray icon with color-coded gauge (green/yellow/orange/red)
+- Panel label showing compact status (e.g., "45%|67%")
+- Dropdown menu with detailed usage info and reset times
+
+Note: Hover tooltips don't work on GNOME Shell due to AppIndicator limitations.
+See KNOWN_ISSUES.md for details.
 """
 import gi
 
@@ -96,9 +102,15 @@ class TrayIndicator:
         icon_path = generate_gauge_icon(session_percent, worst_case_percent)
         self.indicator.set_icon_full(icon_path, 'Claude usage gauge')
 
-        # Update tooltip with both metrics
+        # Update accessibility label (for screen readers, not displayed as tooltip on GNOME)
         tooltip = f"Session: {session_percent:.0f}% | Weekly: {weekly_percent:.0f}%"
         self.indicator.set_title(tooltip)
+
+        # Display compact status in panel (next to icon)
+        # Note: AppIndicator on GNOME Shell doesn't show hover tooltips (known limitation).
+        # This label appears as text in the panel for quick visual reference.
+        compact_label = f"{session_percent:.0f}%|{weekly_percent:.0f}%"
+        self.indicator.set_label(compact_label, "100%|100%")  # guide string for sizing
 
         # Rebuild menu with current data
         self._build_menu()
