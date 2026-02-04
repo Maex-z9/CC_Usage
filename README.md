@@ -2,6 +2,7 @@
 
 A Linux/GNOME system tray application that monitors your Claude Code token usage and alerts you before hitting limits.
 
+[![PyPI version](https://img.shields.io/pypi/v/claude-code-usage.svg)](https://pypi.org/project/claude-code-usage/)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Linux%2FGNOME-lightgrey.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -47,7 +48,20 @@ Install the [AppIndicator Support](https://extensions.gnome.org/extension/615/ap
 
 ## Installation
 
-### Quick Install (recommended)
+### From PyPI (recommended)
+
+1. Install system dependencies (see [System Dependencies](#system-dependencies) above)
+
+2. Install with pipx (recommended) or pip:
+   ```bash
+   pipx install claude-code-usage
+   # or
+   pip install claude-code-usage
+   ```
+
+3. Run: `claude-usage`
+
+### From Source
 
 ```bash
 git clone https://github.com/Maex-z9/CC_Usage.git
@@ -55,32 +69,15 @@ cd CC_Usage
 ./install.sh
 ```
 
-This installs system dependencies and the app. Then run with: `claude-usage`
+This installs system dependencies and the app automatically.
 
-### Manual Install
+### Prerequisites
 
-1. Install system dependencies:
-   ```bash
-   # Ubuntu/Debian
-   sudo apt install python3-gi python3-gi-cairo gir1.2-ayatanaappindicator3-0.1 gir1.2-notify-0.7
-
-   # Fedora
-   sudo dnf install python3-gobject python3-cairo libayatana-appindicator-gtk3 libnotify
-
-   # Arch
-   sudo pacman -S python-gobject python-cairo libayatana-appindicator libnotify
-   ```
-
-2. Install the app:
-   ```bash
-   pip install git+https://github.com/Maex-z9/CC_Usage.git
-   ```
-
-3. Authenticate with Claude Code (if not already done):
-   ```bash
-   claude
-   # Follow the authentication flow
-   ```
+Make sure you have Claude Code CLI installed and authenticated:
+```bash
+claude
+# Follow the authentication flow
+```
 
 ## Usage
 
