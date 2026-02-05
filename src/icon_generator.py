@@ -6,7 +6,26 @@ Generates circular gauge icons using Cairo for system tray display.
 import cairo
 import math
 import os
+import tempfile
+from pathlib import Path
 from typing import Tuple
+
+# Secure temp directory for icons (created once, reused)
+_icon_temp_dir: str | None = None
+
+
+def _get_secure_icon_dir() -> str:
+    """Get or create a secure temporary directory for icon files.
+
+    Returns:
+        Path to secure temp directory with restricted permissions (0o700)
+    """
+    global _icon_temp_dir
+    if _icon_temp_dir is None or not Path(_icon_temp_dir).exists():
+        # Create secure temp directory owned by current user only
+        _icon_temp_dir = tempfile.mkdtemp(prefix="claude-usage-icons-")
+        os.chmod(_icon_temp_dir, 0o700)
+    return _icon_temp_dir
 
 
 def get_color_for_percentage(percentage: float) -> Tuple[float, float, float]:
@@ -85,8 +104,9 @@ def generate_gauge_icon(percentage: float, color_percentage: float, size: int = 
         ctx.arc(center, center, radius, -math.pi / 2, end_angle)
         ctx.stroke()
 
-    # Save to unique filename per percentage and color state (bust GTK icon cache)
-    icon_path = f"/tmp/claude-usage-{int(percentage)}-{color_name}.png"
+    # Save to secure temp directory with unique filename (bust GTK icon cache)
+    icon_dir = _get_secure_icon_dir()
+    icon_path = os.path.join(icon_dir, f"gauge-{int(percentage)}-{color_name}.png")
     surface.write_to_png(icon_path)
 
     return os.path.abspath(icon_path)

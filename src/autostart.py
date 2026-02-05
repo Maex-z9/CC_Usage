@@ -1,6 +1,8 @@
 """Autostart management for Claude Usage Overlay."""
 
 import os
+import shutil
+from configparser import ConfigParser
 from pathlib import Path
 
 
@@ -31,6 +33,28 @@ def get_desktop_file_path() -> Path:
     return get_autostart_path() / 'claude-usage-overlay.desktop'
 
 
+def _get_exec_command() -> str:
+    """Determine the best Exec command for the .desktop file.
+
+    Returns:
+        Command string for Exec= line, preferring installed entry point
+    """
+    # Prefer the installed 'claude-usage' command if available
+    claude_usage_path = shutil.which("claude-usage")
+    if claude_usage_path:
+        return claude_usage_path
+
+    # Fallback to running module directly with python
+    project_root = Path(__file__).parent.parent.absolute()
+    main_py = project_root / "src" / "main.py"
+    if main_py.exists():
+        # Use sys.executable equivalent for current python
+        return f"python3 -m src.main"
+
+    # Last resort: assume it's installed as module
+    return "python3 -m src.main"
+
+
 def create_autostart_entry(enable: bool = True):
     """Create or update autostart .desktop file.
 
@@ -39,9 +63,8 @@ def create_autostart_entry(enable: bool = True):
     """
     desktop_file = get_desktop_file_path()
 
-    # Get absolute path to main.py
-    project_root = Path(__file__).parent.parent.absolute()
-    exec_path = f"/usr/bin/python3 {project_root}/src/main.py"
+    # Get best exec command (prefer installed entry point)
+    exec_cmd = _get_exec_command()
 
     # Desktop entry content
     hidden_value = "false" if enable else "true"
@@ -50,7 +73,7 @@ Type=Application
 Version=1.0
 Name=Claude Code Usage Monitor
 Comment=System tray monitor for Claude Code token usage
-Exec={exec_path}
+Exec={exec_cmd}
 Icon=dialog-information
 Terminal=false
 Categories=Utility;Monitor;
@@ -59,9 +82,10 @@ X-GNOME-Autostart-enabled=true
 Hidden={hidden_value}
 """
 
-    # Write .desktop file
+    # Write .desktop file with secure permissions (rw-r--r--)
+    # .desktop files don't need execute bit - they're parsed by desktop environment
     desktop_file.write_text(content)
-    desktop_file.chmod(0o755)
+    desktop_file.chmod(0o644)
 
 
 def remove_autostart_entry():
@@ -82,13 +106,14 @@ def is_autostart_enabled() -> bool:
     if not desktop_file.exists():
         return False
 
-    content = desktop_file.read_text()
-
-    # Parse for Hidden= line (case insensitive value)
-    for line in content.splitlines():
-        if line.strip().startswith('Hidden='):
-            value = line.split('=', 1)[1].strip().lower()
-            return value != 'true'
-
-    # If Hidden not present, autostart is enabled
-    return True
+    # Use configparser for proper INI parsing
+    parser = ConfigParser(interpolation=None)
+    try:
+        parser.read(desktop_file)
+        # Desktop files use 'Desktop Entry' section
+        # Hidden=true means disabled; absent or false means enabled
+        hidden = parser.get('Desktop Entry', 'Hidden', fallback='false')
+        return hidden.lower() != 'true'
+    except Exception:
+        # If parsing fails, assume enabled if file exists
+        return True

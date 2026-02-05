@@ -63,7 +63,9 @@ def fetch_usage(access_token: str) -> UsageData:
     }
 
     try:
-        response = requests.get(USAGE_ENDPOINT, headers=headers, timeout=10)
+        response = requests.get(
+            USAGE_ENDPOINT, headers=headers, timeout=10, verify=True
+        )
     except requests.RequestException as e:
         raise APIError(f"Network error: {e}")
 
@@ -113,9 +115,8 @@ def fetch_usage(access_token: str) -> UsageData:
         raise APIError(f"Server error: {response.status_code}")
 
     else:
-        raise APIError(
-            f"Unexpected response: {response.status_code} - {response.text}"
-        )
+        # Don't expose response body - may contain sensitive server info
+        raise APIError(f"Unexpected response: {response.status_code}")
 
 
 def fetch_with_retry(access_token: str, max_retries: int = 3) -> UsageData:
