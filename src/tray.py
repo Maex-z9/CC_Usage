@@ -1,25 +1,27 @@
 """
 System tray indicator for Claude Code usage overlay.
 
+Cross-platform: uses pystray for Windows, macOS, and Linux.
+
 Displays usage data via:
-- System tray icon with color-coded gauge (green/yellow/orange/red)
-- Panel label showing compact status (e.g., "45%|67%")
+- System tray icon with color-coded gauge (green/yellow/red)
+- Tooltip showing compact status (e.g., "Session: 45% | Weekly: 67%")
 - Dropdown menu with detailed usage info and reset times
 
-Note: Hover tooltips don't work on GNOME Shell due to AppIndicator limitations.
-See KNOWN_ISSUES.md for details.
+Note: Panel labels (text next to icon) are not supported by pystray.
+Tooltip is used instead for quick status display.
 """
-import gi
-
-gi.require_version('AyatanaAppIndicator3', '0.1')
-gi.require_version('Gtk', '3.0')
-from gi.repository import AyatanaAppIndicator3 as AppIndicator3, Gtk, GLib
 import sys
+import threading
+import webbrowser
+from typing import Optional
+
+import pystray
 
 from src.icon_generator import generate_gauge_icon
 from src.utils import format_time_until
 from src.config import get_access_token, UserConfig, get_config_path
-from src.api import fetch_with_retry, APIError, AuthenticationError
+from src.api import fetch_with_retry, APIError, AuthenticationError, UsageData
 from src.notifier import UsageNotifier
 from src.autostart import create_autostart_entry, is_autostart_enabled, remove_autostart_entry
 
@@ -27,14 +29,12 @@ from src.autostart import create_autostart_entry, is_autostart_enabled, remove_a
 class TrayIndicator:
     """System tray indicator for Claude Code usage."""
 
-    APPINDICATOR_ID = 'claude-usage-overlay'
-
     def __init__(self):
         """Initialize the tray indicator."""
-        self.usage_data = None
-        self.indicator = None
-        self.menu = None
-        self.timer_id = None
+        self.usage_data: Optional[UsageData] = None
+        self.icon: Optional[pystray.Icon] = None
+        self._stop_event = threading.Event()
+        self._update_thread: Optional[threading.Thread] = None
 
         # Load configuration
         self.config = UserConfig.load()
@@ -47,42 +47,71 @@ class TrayIndicator:
 
         self._setup_indicator()
 
-        # Defer initial update and timer start until GTK main loop is running
-        # This ensures the UI is fully initialized before we update it
-        GLib.idle_add(self._initial_update)
-
     def _setup_indicator(self):
-        """Set up the AppIndicator with initial icon and menu."""
-        # Create initial icon at 0% fill with green color (both 0%)
+        """Set up the pystray icon with initial state."""
+        # Create initial icon at 0% fill with green color
         initial_icon = generate_gauge_icon(0, 0)
 
-        # Create AppIndicator
-        self.indicator = AppIndicator3.Indicator.new(
-            self.APPINDICATOR_ID,
-            initial_icon,
-            AppIndicator3.IndicatorCategory.APPLICATION_STATUS
+        # Create pystray Icon
+        self.icon = pystray.Icon(
+            name="claude-usage-overlay",
+            icon=initial_icon,
+            title="Claude Usage: Loading...",
+            menu=self._build_menu()
         )
-        self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
 
-        # Set initial label while loading
-        self.indicator.set_label("...", "100%|100%")
-
-        # Build initial menu with loading message
-        menu = Gtk.Menu()
-        loading_item = Gtk.MenuItem(label="Loading...")
-        loading_item.set_sensitive(False)
-        menu.append(loading_item)
-        menu.show_all()
-
-        self.menu = menu
-        self.indicator.set_menu(menu)
-
-    def _update_usage(self) -> bool:
-        """Fetch usage data and refresh display.
+    def _build_menu(self) -> pystray.Menu:
+        """Build the dropdown menu with usage info and actions.
 
         Returns:
-            bool: GLib.SOURCE_CONTINUE to keep timer running
+            pystray.Menu: The constructed menu
         """
+        # Usage line (shows current percentages or loading state)
+        if self.usage_data is not None:
+            session_percent = self.usage_data.session_percent
+            weekly_percent = self.usage_data.weekly_percent
+            usage_text = f"Session: {session_percent:.0f}%  |  Weekly: {weekly_percent:.0f}%"
+            reset_time_str = format_time_until(self.usage_data.session_resets_at)
+            reset_text = f"Resets in {reset_time_str}"
+        else:
+            usage_text = "Loading..."
+            reset_text = ""
+
+        menu_items = [
+            pystray.MenuItem(usage_text, None, enabled=False),
+        ]
+
+        if reset_text:
+            menu_items.append(pystray.MenuItem(reset_text, None, enabled=False))
+
+        menu_items.extend([
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Refresh", self._on_refresh_clicked),
+            pystray.MenuItem(
+                "Settings",
+                pystray.Menu(
+                    pystray.MenuItem(
+                        "Pause Notifications",
+                        self._on_pause_toggled,
+                        checked=lambda item: self.config.pause_notifications
+                    ),
+                    pystray.MenuItem(
+                        "Autostart on Login",
+                        self._on_autostart_toggled,
+                        checked=lambda item: is_autostart_enabled()
+                    ),
+                    pystray.Menu.SEPARATOR,
+                    pystray.MenuItem("Edit Config File...", self._on_edit_config_clicked),
+                )
+            ),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Quit", self._on_quit_clicked),
+        ])
+
+        return pystray.Menu(*menu_items)
+
+    def _update_usage(self):
+        """Fetch usage data and refresh display."""
         try:
             token = get_access_token()
             self.usage_data = fetch_with_retry(token)
@@ -91,53 +120,18 @@ class TrayIndicator:
         except AuthenticationError as e:
             error_msg = f"Authentication failed: {e}"
             print(error_msg, file=sys.stderr)
-            self.indicator.set_title(error_msg)
+            if self.icon:
+                self.icon.title = error_msg
 
         except (APIError, ValueError, FileNotFoundError) as e:
             error_msg = f"Error: {e}"
             print(error_msg, file=sys.stderr)
-            self.indicator.set_title(error_msg)
-
-        # Return GLib.SOURCE_CONTINUE to keep timer running
-        return GLib.SOURCE_CONTINUE
-
-    def _initial_update(self):
-        """Perform initial update after GTK main loop starts.
-
-        Sets loading label, then defers the API call to give GTK time to render.
-
-        Returns:
-            GLib.SOURCE_REMOVE to run only once
-        """
-        # Set loading label now that main loop is running
-        self.indicator.set_label("...", "100%|100%")
-
-        # Defer API call with small timeout so GTK can render the loading label
-        GLib.timeout_add(50, self._do_initial_fetch)  # 50ms delay
-        return GLib.SOURCE_REMOVE
-
-    def _do_initial_fetch(self):
-        """Fetch initial data and start update timer.
-
-        Returns:
-            GLib.SOURCE_REMOVE to run only once
-        """
-        self._update_usage()
-        self._start_update_timer()
-        return GLib.SOURCE_REMOVE
-
-    def _start_update_timer(self):
-        """Start or restart periodic update timer with config interval."""
-        if self.timer_id is not None:
-            GLib.source_remove(self.timer_id)
-        self.timer_id = GLib.timeout_add_seconds(
-            self.config.polling_interval,
-            self._update_usage
-        )
+            if self.icon:
+                self.icon.title = error_msg
 
     def _refresh_display(self):
         """Update icon, tooltip, and menu based on current usage data."""
-        if self.usage_data is None:
+        if self.usage_data is None or self.icon is None:
             return
 
         session_percent = self.usage_data.session_percent
@@ -147,32 +141,25 @@ class TrayIndicator:
         # Color shows worst-case urgency (max of session and weekly)
         worst_case_percent = max(session_percent, weekly_percent)
 
-        # Generate icon with separate percentage (arc fill) and color
-        icon_path = generate_gauge_icon(session_percent, worst_case_percent)
-        self.indicator.set_icon_full(icon_path, 'Claude usage gauge')
+        # Generate new icon image
+        new_icon = generate_gauge_icon(session_percent, worst_case_percent)
+        self.icon.icon = new_icon
 
-        # Update accessibility label (for screen readers, not displayed as tooltip on GNOME)
+        # Update tooltip (shown on hover)
         tooltip = f"Session: {session_percent:.0f}% | Weekly: {weekly_percent:.0f}%"
-        self.indicator.set_title(tooltip)
-
-        # Display compact status in panel (next to icon)
-        # Note: AppIndicator on GNOME Shell doesn't show hover tooltips (known limitation).
-        # This label appears as text in the panel for quick visual reference.
-        compact_label = f"{session_percent:.0f}%|{weekly_percent:.0f}%"
-        self.indicator.set_label(compact_label, "100%|100%")  # guide string for sizing
+        self.icon.title = tooltip
 
         # Rebuild menu with current data
-        self._build_menu()
+        self.icon.menu = self._build_menu()
 
         # Pass pause flag to notifier before check_and_notify
         self.notifier.pause_notifications = self.config.pause_notifications
 
         # Check thresholds and show notifications if needed
-        # Convert datetime to timestamp for notifier
         session_reset_ts = (self.usage_data.session_resets_at.timestamp()
-                            if self.usage_data.session_resets_at else 0)
+                           if self.usage_data.session_resets_at else 0)
         weekly_reset_ts = (self.usage_data.weekly_resets_at.timestamp()
-                           if self.usage_data.weekly_resets_at else 0)
+                          if self.usage_data.weekly_resets_at else 0)
 
         self.notifier.check_and_notify(
             session_percent,
@@ -181,122 +168,58 @@ class TrayIndicator:
             weekly_reset_ts
         )
 
-    def _build_menu(self) -> Gtk.Menu:
-        """Build the dropdown menu with usage info and actions.
+    def _update_loop(self):
+        """Background thread that periodically updates usage data."""
+        # Initial update
+        self._update_usage()
 
-        Returns:
-            Gtk.Menu: The constructed menu
-        """
-        menu = Gtk.Menu()
-
-        # Add usage line (non-clickable)
-        session_percent = self.usage_data.session_percent
-        weekly_percent = self.usage_data.weekly_percent
-        usage_text = f"Session: {session_percent:.0f}%  |  Weekly: {weekly_percent:.0f}%"
-        usage_item = Gtk.MenuItem(label=usage_text)
-        usage_item.set_sensitive(False)
-        menu.append(usage_item)
-
-        # Add reset time line (non-clickable)
-        # Use session_resets_at (5-hour is more relevant for active users)
-        reset_time_str = format_time_until(self.usage_data.session_resets_at)
-        reset_item = Gtk.MenuItem(label=f"Resets in {reset_time_str}")
-        reset_item.set_sensitive(False)
-        menu.append(reset_item)
-
-        # Add separator
-        menu.append(Gtk.SeparatorMenuItem())
-
-        # Add Refresh item
-        # Note: AppIndicator menus don't support GTK accelerators (no window to attach AccelGroup)
-        # Show the shortcut hint in the label instead
-        refresh_item = Gtk.MenuItem(label="Refresh")
-        refresh_item.connect('activate', self._on_refresh_clicked)
-        menu.append(refresh_item)
-
-        # Add Settings submenu
-        settings_item = Gtk.MenuItem(label="Settings")
-        settings_submenu = Gtk.Menu()
-
-        # Pause Notifications checkbox
-        pause_item = Gtk.CheckMenuItem(label="Pause Notifications")
-        pause_item.set_active(self.config.pause_notifications)
-        pause_item.connect('activate', self._on_pause_toggled)
-        settings_submenu.append(pause_item)
-
-        # Autostart on Login checkbox
-        autostart_item = Gtk.CheckMenuItem(label="Autostart on Login")
-        autostart_item.set_active(is_autostart_enabled())
-        autostart_item.connect('activate', self._on_autostart_toggled)
-        settings_submenu.append(autostart_item)
-
-        # Separator
-        settings_submenu.append(Gtk.SeparatorMenuItem())
-
-        # Edit Config File item
-        edit_config_item = Gtk.MenuItem(label="Edit Config File...")
-        edit_config_item.connect('activate', self._on_edit_config_clicked)
-        settings_submenu.append(edit_config_item)
-
-        settings_item.set_submenu(settings_submenu)
-        menu.append(settings_item)
-
-        # Add separator
-        menu.append(Gtk.SeparatorMenuItem())
-
-        # Add Quit item
-        quit_item = Gtk.MenuItem(label="Quit")
-        quit_item.connect('activate', self._on_quit_clicked)
-        menu.append(quit_item)
-
-        # Show all menu items
-        menu.show_all()
-
-        # Update instance menu and indicator
-        self.menu = menu
-        self.indicator.set_menu(menu)
-
-        return menu
-
-    def _on_refresh_clicked(self, widget):
-        """Handle Refresh menu item click.
-
-        Uses GLib.idle_add to defer the update until after the menu closes,
-        avoiding GTK crashes from rebuilding the menu during event handling.
-        """
-        def do_refresh():
+        # Periodic updates
+        while not self._stop_event.wait(timeout=self.config.polling_interval):
             self._update_usage()
-            return GLib.SOURCE_REMOVE  # Run only once, don't repeat
-        GLib.idle_add(do_refresh)
 
-    def _on_pause_toggled(self, widget):
+    def _on_refresh_clicked(self, icon=None, item=None):
+        """Handle Refresh menu item click."""
+        # Run update in background thread to avoid blocking UI
+        threading.Thread(target=self._update_usage, daemon=True).start()
+
+    def _on_pause_toggled(self, icon=None, item=None):
         """Handle Pause Notifications toggle."""
-        self.config.pause_notifications = widget.get_active()
+        self.config.pause_notifications = not self.config.pause_notifications
         self.config.save()
         self.notifier.pause_notifications = self.config.pause_notifications
 
-    def _on_autostart_toggled(self, widget):
+    def _on_autostart_toggled(self, icon=None, item=None):
         """Handle Autostart toggle."""
-        if widget.get_active():
-            create_autostart_entry(True)
-        else:
+        if is_autostart_enabled():
             remove_autostart_entry()
-        self.config.autostart_enabled = widget.get_active()
+            self.config.autostart_enabled = False
+        else:
+            create_autostart_entry(True)
+            self.config.autostart_enabled = True
         self.config.save()
 
-    def _on_edit_config_clicked(self, widget):
-        """Open config file in default editor."""
-        import subprocess
+    def _on_edit_config_clicked(self, icon=None, item=None):
+        """Open config file in default editor/viewer."""
         config_path = get_config_path()
         # Ensure file exists with defaults
         if not config_path.exists():
             self.config.save()
-        subprocess.Popen(["/usr/bin/xdg-open", str(config_path)])
 
-    def _on_quit_clicked(self, widget):
+        # Use webbrowser for cross-platform file opening
+        # This works on Windows, macOS, and Linux
+        webbrowser.open(str(config_path))
+
+    def _on_quit_clicked(self, icon=None, item=None):
         """Handle Quit menu item click."""
-        Gtk.main_quit()
+        self._stop_event.set()
+        if self.icon:
+            self.icon.stop()
 
     def run(self):
-        """Start the GTK main loop."""
-        Gtk.main()
+        """Start the tray indicator."""
+        # Start background update thread
+        self._update_thread = threading.Thread(target=self._update_loop, daemon=True)
+        self._update_thread.start()
+
+        # Run pystray main loop (blocks until icon.stop() is called)
+        self.icon.run()

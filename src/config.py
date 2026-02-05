@@ -1,4 +1,7 @@
-"""Configuration module for loading Claude OAuth credentials."""
+"""Configuration module for loading Claude OAuth credentials.
+
+Cross-platform: uses platformdirs for config directory resolution.
+"""
 
 import json
 import os
@@ -6,8 +9,14 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import platformdirs
+
 
 CREDENTIALS_PATH = Path.home() / ".claude" / ".credentials.json"
+
+# Application info for platformdirs
+APP_NAME = "claude-usage-overlay"
+APP_AUTHOR = "claude-usage"  # Used on Windows
 
 
 def load_credentials() -> dict:
@@ -74,22 +83,27 @@ def get_access_token() -> str:
     return credentials["accessToken"]
 
 
-def get_config_path() -> Path:
-    """Get XDG-compliant config file path.
+def get_config_dir() -> Path:
+    """Get cross-platform config directory.
 
     Returns:
-        Path: Path to config.json in XDG config directory
+        Path: Config directory path
+        - Linux: ~/.config/claude-usage-overlay/
+        - Windows: %APPDATA%/claude-usage/claude-usage-overlay/
+        - macOS: ~/Library/Application Support/claude-usage-overlay/
     """
-    config_home = os.environ.get('XDG_CONFIG_HOME')
-    if config_home:
-        base = Path(config_home)
-    else:
-        base = Path.home() / '.config'
-
-    config_dir = base / 'claude-usage-overlay'
+    config_dir = Path(platformdirs.user_config_dir(APP_NAME, APP_AUTHOR))
     config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
 
-    return config_dir / 'config.json'
+
+def get_config_path() -> Path:
+    """Get cross-platform config file path.
+
+    Returns:
+        Path: Path to config.json in platform-specific config directory
+    """
+    return get_config_dir() / 'config.json'
 
 
 @dataclass
@@ -140,7 +154,7 @@ class UserConfig:
 
     @classmethod
     def load(cls) -> 'UserConfig':
-        """Load configuration from XDG config file.
+        """Load configuration from config file.
 
         Returns:
             UserConfig: Configuration object with values from file or defaults
@@ -165,12 +179,16 @@ class UserConfig:
             raise ValueError(f"Invalid config file structure: {e}")
 
     def save(self):
-        """Save configuration to XDG config file."""
+        """Save configuration to config file."""
         config_path = get_config_path()
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(config_path, 'w') as f:
             json.dump(asdict(self), f, indent=2)
 
-        # Set secure permissions (owner read/write only)
-        os.chmod(config_path, 0o600)
+        # Set secure permissions (owner read/write only) on Unix
+        try:
+            os.chmod(config_path, 0o600)
+        except (OSError, AttributeError):
+            # Windows doesn't support chmod the same way, skip
+            pass
