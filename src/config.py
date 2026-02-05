@@ -171,3 +171,6 @@ class UserConfig:
 
         with open(config_path, 'w') as f:
             json.dump(asdict(self), f, indent=2)
+
+        # Set secure permissions (owner read/write only)
+        os.chmod(config_path, 0o600)
