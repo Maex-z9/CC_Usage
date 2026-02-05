@@ -48,18 +48,27 @@ def _get_exec_command() -> str:
     """Determine the best Exec command for autostart.
 
     Returns:
-        Command string, preferring installed entry point
+        Command string, preferring installed entry point.
+        On Windows, paths are quoted to handle spaces.
     """
     # Prefer the installed 'claude-usage' command if available
     claude_usage_path = shutil.which("claude-usage")
     if claude_usage_path:
+        # Quote path on Windows in case of spaces
+        if IS_WINDOWS and ' ' in claude_usage_path:
+            return f'"{claude_usage_path}"'
         return claude_usage_path
 
     # For PyInstaller frozen executable
     if getattr(sys, 'frozen', False):
+        if IS_WINDOWS and ' ' in sys.executable:
+            return f'"{sys.executable}"'
         return sys.executable
 
     # Fallback to running module directly with python
+    if IS_WINDOWS:
+        # Quote Python path on Windows (often in "Program Files")
+        return f'"{sys.executable}" -m src.main'
     return f"{sys.executable} -m src.main"
 
 

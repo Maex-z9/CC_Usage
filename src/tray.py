@@ -13,7 +13,6 @@ Tooltip is used instead for quick status display.
 """
 import sys
 import threading
-import webbrowser
 from typing import Optional
 
 import pystray
@@ -200,14 +199,21 @@ class TrayIndicator:
 
     def _on_edit_config_clicked(self, icon=None, item=None):
         """Open config file in default editor/viewer."""
+        import os
+        import subprocess
+
         config_path = get_config_path()
         # Ensure file exists with defaults
         if not config_path.exists():
             self.config.save()
 
-        # Use webbrowser for cross-platform file opening
-        # This works on Windows, macOS, and Linux
-        webbrowser.open(str(config_path))
+        # Platform-specific file opening
+        if sys.platform == 'win32':
+            os.startfile(config_path)
+        elif sys.platform == 'darwin':
+            subprocess.run(['open', str(config_path)])
+        else:
+            subprocess.run(['xdg-open', str(config_path)])
 
     def _on_quit_clicked(self, icon=None, item=None):
         """Handle Quit menu item click."""
