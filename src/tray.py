@@ -28,8 +28,15 @@ from src.autostart import create_autostart_entry, is_autostart_enabled, remove_a
 class TrayIndicator:
     """System tray indicator for Claude Code usage."""
 
-    def __init__(self):
-        """Initialize the tray indicator."""
+    def __init__(self, claude_config_dir=None):
+        """Initialize the tray indicator.
+
+        Args:
+            claude_config_dir: Optional Path to the Claude config directory
+                (containing .credentials.json). Overrides CLAUDE_CONFIG_DIR
+                env var and the default ~/.claude location.
+        """
+        self._claude_config_dir = claude_config_dir
         self.usage_data: Optional[UsageData] = None
         self.icon: Optional[pystray.Icon] = None
         self._stop_event = threading.Event()
@@ -112,7 +119,7 @@ class TrayIndicator:
     def _update_usage(self):
         """Fetch usage data and refresh display."""
         try:
-            token = get_access_token()
+            token = get_access_token(self._claude_config_dir)
             self.usage_data = fetch_with_retry(token)
             self._refresh_display()
 
