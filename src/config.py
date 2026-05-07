@@ -5,6 +5,7 @@ Cross-platform: uses platformdirs for config directory resolution.
 
 import json
 import os
+import sys
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -12,15 +13,39 @@ from pathlib import Path
 import platformdirs
 
 
-CREDENTIALS_PATH = Path.home() / ".claude" / ".credentials.json"
-
 # Application info for platformdirs
 APP_NAME = "claude-usage-overlay"
 APP_AUTHOR = "claude-usage"  # Used on Windows
 
 
-def load_credentials() -> dict:
-    """Load Claude OAuth credentials from ~/.claude/.credentials.json.
+def get_credentials_path(claude_config_dir: Path = None) -> Path:
+    """Resolve the credentials file path.
+
+    Priority order:
+      1. claude_config_dir argument (from --config CLI option)
+      2. CLAUDE_CONFIG_DIR environment variable
+      3. Default ~/.claude
+
+    Args:
+        claude_config_dir: Optional explicit override directory
+
+    Returns:
+        Path: Full path to .credentials.json
+    """
+    if claude_config_dir is not None:
+        base = claude_config_dir
+    else:
+        env_dir = os.environ.get("CLAUDE_CONFIG_DIR")
+        base = Path(env_dir) if env_dir else Path.home() / ".claude"
+    return base / ".credentials.json"
+
+
+def load_credentials(claude_config_dir: Path = None) -> dict:
+    """Load Claude OAuth credentials.
+
+    Args:
+        claude_config_dir: Optional override for the Claude config directory.
+            Respects CLAUDE_CONFIG_DIR env var if not provided.
 
     Returns:
         dict: The claudeAiOauth object containing accessToken, expiresAt, etc.
@@ -29,13 +54,16 @@ def load_credentials() -> dict:
         FileNotFoundError: If credentials file doesn't exist
         ValueError: If credentials file format is invalid
     """
-    if not CREDENTIALS_PATH.exists():
+    credentials_path = get_credentials_path(claude_config_dir)
+
+    if not credentials_path.exists():
         raise FileNotFoundError(
-            "Claude credentials not found. Run `claude` first to authenticate."
+            f"Claude credentials not found at {credentials_path}. "
+            "Run `claude` first to authenticate."
         )
 
     try:
-        with open(CREDENTIALS_PATH, 'r') as f:
+        with open(credentials_path, 'r') as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid credentials file format: {e}")
@@ -65,8 +93,11 @@ def is_token_expired(credentials: dict) -> bool:
     return current_time_ms >= expires_at
 
 
-def get_access_token() -> str:
+def get_access_token(claude_config_dir: Path = None) -> str:
     """Get a valid OAuth access token.
+
+    Args:
+        claude_config_dir: Optional override for the Claude config directory.
 
     Returns:
         str: The access token string
@@ -75,7 +106,7 @@ def get_access_token() -> str:
         FileNotFoundError: If credentials file doesn't exist
         ValueError: If credentials are invalid or token expired
     """
-    credentials = load_credentials()
+    credentials = load_credentials(claude_config_dir)
 
     if is_token_expired(credentials):
         raise ValueError("OAuth token has expired")
@@ -179,16 +210,16 @@ class UserConfig:
             raise ValueError(f"Invalid config file structure: {e}")
 
     def save(self):
-        """Save configuration to config file."""
+        """Save configuration to config file with secure permissions."""
         config_path = get_config_path()
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(config_path, 'w') as f:
-            json.dump(asdict(self), f, indent=2)
-
-        # Set secure permissions (owner read/write only) on Unix
-        try:
-            os.chmod(config_path, 0o600)
-        except (OSError, AttributeError):
-            # Windows doesn't support chmod the same way, skip
-            pass
+        if sys.platform != 'win32':
+            # Open with O_CREAT so the file is created with mode 0o600 atomically,
+            # avoiding a window where the file exists with world-readable permissions.
+            fd = os.open(config_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, 'w') as f:
+                json.dump(asdict(self), f, indent=2)
+        else:
+            with open(config_path, 'w') as f:
+                json.dump(asdict(self), f, indent=2)
