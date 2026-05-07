@@ -92,6 +92,23 @@ Or if running from source:
 python3 -m src.main
 ```
 
+### Custom Claude config directory
+
+By default the app reads OAuth credentials from `~/.claude/.credentials.json`.
+You can point it at a different directory in two ways (highest priority first):
+
+1. `--config DIR` CLI flag:
+   ```bash
+   claude-usage --config /path/to/claude-config
+   ```
+2. `CLAUDE_CONFIG_DIR` environment variable:
+   ```bash
+   CLAUDE_CONFIG_DIR=/path/to/claude-config claude-usage
+   ```
+
+The directory must contain a `.credentials.json` file produced by the Claude
+Code CLI.
+
 ### Menu Options
 
 Click the tray icon to access:
@@ -127,7 +144,7 @@ Config file location: `~/.config/claude-usage-overlay/config.json`
 
 ## How It Works
 
-1. Reads your OAuth token from `~/.claude/.credentials.json` (created by Claude Code CLI)
+1. Reads your OAuth token from `~/.claude/.credentials.json` (created by Claude Code CLI; overridable via `--config DIR` or `CLAUDE_CONFIG_DIR`)
 2. Polls the Anthropic usage API every 5 minutes (configurable)
 3. Displays usage in the system tray with color-coded urgency
 4. Shows desktop notifications when thresholds are crossed

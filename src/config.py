@@ -220,6 +220,10 @@ class UserConfig:
             fd = os.open(config_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             with os.fdopen(fd, 'w') as f:
                 json.dump(asdict(self), f, indent=2)
+            # O_CREAT only sets the mode when the file is created; heal any
+            # pre-existing file written by older versions that may still be
+            # world-readable.
+            os.chmod(config_path, 0o600)
         else:
             with open(config_path, 'w') as f:
                 json.dump(asdict(self), f, indent=2)
