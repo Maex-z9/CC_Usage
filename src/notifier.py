@@ -29,11 +29,9 @@ class UsageNotifier:
             session_thresholds: List of threshold percentages for session (default [50, 75, 90])
             weekly_thresholds: List of threshold percentages for weekly (default to session_thresholds)
         """
-        # Initialize desktop-notifier
-        self.notifier = DesktopNotifier(
-            app_name=app_name,
-            notification_limit=10
-        )
+        self.app_name = app_name
+        self.notifier = None
+        self._notifier_init_attempted = False
 
         # Configure thresholds
         self.session_thresholds = session_thresholds if session_thresholds is not None else [50, 75, 90]
@@ -248,6 +246,20 @@ class UsageNotifier:
             body: Notification body text
             urgency: Urgency level
         """
+        if not self._notifier_init_attempted:
+            self._notifier_init_attempted = True
+            try:
+                self.notifier = DesktopNotifier(
+                    app_name=self.app_name,
+                    notification_limit=10
+                )
+            except Exception as e:
+                print(f"Warning: Failed to initialize desktop notifications: {e}", file=sys.stderr)
+                self.notifier = None
+
+        if self.notifier is None:
+            return
+
         try:
             await self.notifier.send(
                 title=title,

@@ -17,6 +17,20 @@ from typing import Optional
 
 import pystray
 
+# Monkey patch pystray's internal Notifier to prevent DBus timeout on Linux
+# pystray's gtk and appindicator backends instantiate a synchronous DBus connection
+# to org.freedesktop.Notifications, which can hang for 25s and crash on KDE/headless setups.
+# We don't use pystray's notify() anyway since we use desktop_notifier.
+try:
+    from pystray._util import notify_dbus
+    class DummyNotifier:
+        def __init__(self): pass
+        def notify(self, title, message, icon): pass
+        def hide(self): pass
+    notify_dbus.Notifier = DummyNotifier
+except ImportError:
+    pass
+
 from src.icon_generator import generate_gauge_icon
 from src.utils import format_time_until
 from src.config import get_access_token, UserConfig, get_config_path
